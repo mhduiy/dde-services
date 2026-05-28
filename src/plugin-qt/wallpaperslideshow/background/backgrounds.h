@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -22,6 +22,7 @@ public:
         BT_Solid = 0,
         BT_Custom,
         BT_Sys,
+        BT_Live,
         BT_All
     };
 
@@ -41,10 +42,14 @@ public:
 
     static BackgroundType getBackgroundType(QString id);
 
+    bool isLiveWallpaperFile(QString file);
+    QStringList getLiveBgFilesInDir(QString dir);
+
 private:
     void init();
     QStringList getSysBgFIles();
     QStringList getCustomBgFiles();
+    QStringList getLiveBgFiles();
     Backgrounds(QObject *parent = nullptr);
 
 private:
@@ -52,8 +57,10 @@ private:
     QStringList solidBackgrounds;
     QStringList customBackgrounds;
     QStringList sysBackgrounds;
+    QStringList liveBackgrounds;
 
     static QStringList systemWallpapersDir;
+    static QStringList liveWallpapersDir;
     static QStringList uiSupportedFormats;
 };
 

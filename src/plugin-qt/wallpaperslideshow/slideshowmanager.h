@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -7,6 +7,7 @@
 #include "background/backgrounds.h"
 #include "wallpaperscheduler.h"
 #include "appearancedbusproxy.h"
+#include "treelandwallpapermonitor.h"
 
 #include <DConfig>
 #include <QScopedPointer>
@@ -52,6 +53,7 @@ private:
     QMap<QString,QSharedPointer<WallpaperScheduler>> m_wsSchedulerMap;
     QMap<QString,QSharedPointer<WallpaperLoop>>      m_wsLoopMap;
     QSharedPointer<AppearanceDBusProxy>              m_dbusProxy;
+    QScopedPointer<TreelandWallpaperMonitor>         m_treelandMonitor;
     QString                                          m_wallpaperSlideShow;
     QMap<QString, Backgrounds::BackgroundType>       m_wallpaperType;
 };

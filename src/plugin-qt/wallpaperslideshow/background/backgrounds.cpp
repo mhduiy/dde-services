@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -14,6 +14,7 @@
 #include <QDBusReply>
 
 QStringList Backgrounds::systemWallpapersDir = { "/usr/share/wallpapers/deepin", "/usr/share/wallpapers/deepin-solidwallpapers"};
+QStringList Backgrounds::liveWallpapersDir = { "/usr/share/wallpapers/deepin-livewallpapers" };
 QStringList Backgrounds::uiSupportedFormats = { "jpeg", "png", "bmp", "tiff", "gif" };
 
 Backgrounds* Backgrounds::instance(QObject *parent)
@@ -70,6 +71,16 @@ void Backgrounds::refreshBackground()
             sysBackgrounds.push_back(bg);
         }
     }
+
+    files = getLiveBgFiles();
+    for (auto file : files) {
+        if (!QFile::exists(file)) {
+            continue;
+        }
+        const QString &bg = utils::enCodeURI(file, SCHEME_FILE);
+        backgrounds.push_back(bg);
+        liveBackgrounds.push_back(bg);
+    }
 }
 
 void Backgrounds::clear()
@@ -78,6 +89,7 @@ void Backgrounds::clear()
     solidBackgrounds.clear();
     customBackgrounds.clear();
     sysBackgrounds.clear();
+    liveBackgrounds.clear();
 }
 
 QStringList Backgrounds::getSysBgFIles()
@@ -158,6 +170,41 @@ bool Backgrounds::isFileInDirs(QString file, QStringList dirs)
     return false;
 }
 
+QStringList Backgrounds::getLiveBgFiles()
+{
+    QStringList files;
+    for (auto dir : liveWallpapersDir) {
+        files.append(getLiveBgFilesInDir(dir));
+    }
+    return files;
+}
+
+QStringList Backgrounds::getLiveBgFilesInDir(QString dir)
+{
+    QStringList wallpapers;
+
+    QDir qdir(dir);
+    if (!qdir.exists())
+        return wallpapers;
+
+    QFileInfoList fileInfoList = qdir.entryInfoList(QDir::NoSymLinks);
+    for (auto info : fileInfoList) {
+        if (info.isDir())
+            continue;
+        if (!isLiveWallpaperFile(info.filePath()))
+            continue;
+        wallpapers.append(info.filePath());
+    }
+
+    return wallpapers;
+}
+
+bool Backgrounds::isLiveWallpaperFile(QString file)
+{
+    file = utils::deCodeURI(file);
+    return FormatPicture::isVideoFile(file);
+}
+
 bool Backgrounds::isBackgroundFile(QString file)
 {
     file = utils::deCodeURI(file);
@@ -192,6 +239,8 @@ QStringList Backgrounds::getBackground(BackgroundType type)
         return customBackgrounds;
     case BT_Sys:
         return sysBackgrounds;
+    case BT_Live:
+        return liveBackgrounds;
     case BT_All:
         return backgrounds;
     default:
@@ -208,6 +257,12 @@ Backgrounds::BackgroundType Backgrounds::getBackgroundType(QString id)
     for (const auto &dir : systemWallpapersDir) {
         if (path.startsWith(dir)) {
             return BT_Sys;
+        }
+    }
+
+    for (const auto &dir : liveWallpapersDir) {
+        if (path.startsWith(dir)) {
+            return BT_Live;
         }
     }
 

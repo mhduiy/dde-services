@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -13,9 +13,11 @@ class FormatPicture{
 
 public:
     static QString getPictureType(QString file);
+    static bool isVideoFile(QString file);
 
 private:
     static QMap<QString,QString> typeMap;
+    static QMap<QString,QString> videoTypeMap;
 };
 
 

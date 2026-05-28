@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+# SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -14,8 +14,9 @@ set(CMAKE_AUTORCC ON)
 include(GNUInstallDirs)
 file(GLOB_RECURSE SRCS "*.h" "*.cpp")
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core DBus)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core DBus WaylandClient)
 find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED COMPONENTS Gui Core)
+find_package(TreelandProtocols REQUIRED)
 
 qt_add_dbus_adaptor(ADAPTER_SOURCES
                      org.deepin.dde.WallpaperSlideshow.xml
@@ -27,6 +28,12 @@ add_library(${BIN_NAME} MODULE
     ${ADAPTER_SOURCES}
 )
 
+qt6_generate_wayland_protocol_client_sources(${BIN_NAME} FILES
+    ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-wallpaper-manager-unstable-v1.xml
+)
+
+target_compile_definitions(${BIN_NAME} PRIVATE Enable_Treeland)
+
 target_include_directories(${BIN_NAME} PUBLIC
   Qt${QT_VERSION_MAJOR}::Core
   Qt${QT_VERSION_MAJOR}::DBus
@@ -35,6 +42,8 @@ target_include_directories(${BIN_NAME} PUBLIC
 target_link_libraries(${BIN_NAME} PRIVATE
   Qt${QT_VERSION_MAJOR}::Core
   Qt${QT_VERSION_MAJOR}::DBus
+  Qt${QT_VERSION_MAJOR}::WaylandClient
+  Qt${QT_VERSION_MAJOR}::WaylandClientPrivate
   Dtk${DTK_VERSION_MAJOR}::Core
   Dtk${DTK_VERSION_MAJOR}::Gui
 )

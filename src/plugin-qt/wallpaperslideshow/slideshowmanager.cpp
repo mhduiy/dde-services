@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -20,10 +20,13 @@ SlideshowManager::SlideshowManager(QObject *parent)
     : QObject(parent)
     , m_settingDconfig(DConfig::create(APPEARANCEAPPID, APPEARANCESCHEMA, "", this))
     , m_dbusProxy(new AppearanceDBusProxy(this))
+    , m_treelandMonitor(new TreelandWallpaperMonitor(this))
 {
     loadConfig();
     connect(m_dbusProxy.get(), &AppearanceDBusProxy::HandleForSleep, this, &SlideshowManager::handlePrepareForSleep);
     connect(m_dbusProxy.get(), &AppearanceDBusProxy::WallpaperURlsChanged, this, &SlideshowManager::onWallpaperChanged);
+    connect(m_treelandMonitor.get(), &TreelandWallpaperMonitor::wallpaperChanged, this, &SlideshowManager::onWallpaperChanged);
+    m_treelandMonitor->init();
     init();
 }
 
@@ -369,10 +372,25 @@ void SlideshowManager::onWallpaperChanged()
     qDebug() << "wallpaper changed";
     Backgrounds::instance()->refreshBackground();
     bool update = false;
+
+    const bool useTreeland = DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)
+                             && m_treelandMonitor && m_treelandMonitor->isActive();
+
+    qDebug() << "wallpaper changed, useTreeland:" << useTreeland;
+
     for (const auto &screen : qApp->screens()) {
         if (screen) {
             const QString &screenName = screen->name();
-            const auto &wallpaper = m_dbusProxy->getCurrentWorkspaceBackgroundForMonitor(screenName);
+            QString wallpaper;
+            if (useTreeland) {
+                wallpaper = m_treelandMonitor->getCurrentWallpaper(screenName);
+            } else {
+                wallpaper = m_dbusProxy->getCurrentWorkspaceBackgroundForMonitor(screenName);
+            }
+
+            if (wallpaper.isEmpty())
+                continue;
+
             const auto &wallpaperType = Backgrounds::getBackgroundType(wallpaper);
 
             if (m_wallpaperType.value(screenName) != wallpaperType) {
